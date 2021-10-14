@@ -1,13 +1,32 @@
+//require the module qrcode
+const QRCode = require('qrcode');
+
+//hej
 module.exports = async function (context, req) {
     context.log('JavaScript HTTP trigger function processed a request.');
 
-    const name = (req.query.name || (req.body && req.body.name));
-    const responseMessage = name
-        ? "Hello, " + name + ". This HTTP triggered function executed successfully."
-        : "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.";
-
-    context.res = {
-        // status: 200, /* Defaults to 200 */
-        body: responseMessage
-    };
+    if(req.query.text) { 
+        let code;
+        try {
+            code = await QRCode.toDataURL(req.query.text);
+        } catch (err) {
+            context.log.error('ERROR', err);
+            throw err;
+        }
+        if (code) {
+            context.res = {
+                body: code
+            }
+        } else {
+            context.res = {
+                body: "Error: QR Code rendering error",
+                status: 400
+            }
+        }
+    } else {
+        context.res = {
+            body: "Error: Missing query string text",
+            status: 400
+        }
+    }
 }
